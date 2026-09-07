@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Question Me - Result</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-mark">IQ</div>
+
+            <div>
+                <div class="brand-name">Question Me</div>
+                <div class="brand-sub">Aptitude Test</div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESULT -->
+
+    <div id="view-result">
+
+        <div class="result-hero">
+
+            <div
+                class="grade-badge"
+                id="result-grade">
+
+                A
+
+            </div>
+
+
+            <h2 id="result-title">
+                Level 1 complete
+            </h2>
+
+
+            <p id="result-sub">
+                Nice work.
+            </p>
+
+        </div>
+
+
+        <div class="result-grid">
+
+            <div class="rbox">
+
+                <div
+                    class="n teal"
+                    id="r-correct">
+
+                    0
+
+                </div>
+
+                <div class="l">
+                    Correct
+                </div>
+
+            </div>
+
+
+            <div class="rbox">
+
+                <div
+                    class="n coral"
+                    id="r-incorrect">
+
+                    0
+
+                </div>
+
+                <div class="l">
+                    Incorrect
+                </div>
+
+            </div>
+
+
+            <div class="rbox">
+
+                <div
+                    class="n"
+                    id="r-unattempted">
+
+                    0
+
+                </div>
+
+                <div class="l">
+                    Unattempted
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="stat-strip"
+            style="grid-template-columns:repeat(2,1fr);">
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Marks
+                </div>
+
+                <div
+                    class="value gold"
+                    id="r-marks">
+
+                    0 / 15
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Percentage
+                </div>
+
+                <div
+                    class="value"
+                    id="r-percent">
+
+                    0%
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="btn btn-primary"
+            id="btn-review-toggle"
+            style="margin-bottom:10px;">
+
+            Review Answers
+
+        </button>
+
+
+        <button
+    class="btn btn-ghost"
+    id="btn-back-trail"
+    onclick="window.location.href='/trail';">
+
+    Back to Trail
+
+</button>
+
+
+        <div
+            id="review-list"
+            style="margin-top:18px;"
+            class="hidden">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    const result = JSON.parse(localStorage.getItem("lastResult"));
+    const level = localStorage.getItem("lastLevel") || 1;
+
+    if (result) {
+
+        // Grade
+        document.getElementById("result-grade").textContent = result.grade;
+
+        // Title
+        document.getElementById("result-title").textContent =
+            result.passed
+                ? `Level ${level} cleared!`
+                : `Level ${level} — not cleared yet`;
+
+        // Subtitle
+        document.getElementById("result-sub").textContent =
+            result.passed
+                ? (Number(level) < 20
+                    ? `Level ${Number(level) + 1} is now unlocked.`
+                    : "You have conquered the final level!")
+                : "Score 40% or higher to unlock the next level. Try again!";
+
+        // Score
+        document.getElementById("r-correct").textContent =
+            result.correct;
+
+        document.getElementById("r-incorrect").textContent =
+            result.incorrect;
+
+        document.getElementById("r-unattempted").textContent =
+            result.unattempted;
+
+        document.getElementById("r-marks").textContent =
+            `${result.marks} / 15`;
+
+        document.getElementById("r-percent").textContent =
+            `${result.percent}%`;
+
+
+        // =========================
+        // REVIEW ANSWERS
+        // =========================
+
+        const reviewList = document.getElementById("review-list");
+        const reviewButton = document.getElementById("btn-review-toggle");
+
+        reviewList.innerHTML = result.reviews.map((item, index) => {
+
+            const question = item.q;
+            const yourAnswer =
+                item.ans !== null
+                    ? question.opts[item.ans]
+                    : "Not answered";
+
+            const correctAnswer =
+                question.opts[question.correctIndex];
+
+            const isCorrect =
+                item.ans === question.correctIndex;
+
+            return `
+                <div class="review-item">
+
+                    <div class="qmeta">
+                        Q${index + 1} · ${question.category}
+                    </div>
+
+                    <div class="qtext">
+                        ${question.qtext}
+                    </div>
+
+                    ${
+                        question.code
+                        ? `<pre>${question.code}</pre>`
+                        : ""
+                    }
+
+                    <div class="ans-line ${isCorrect ? "correct" : "wrong"}">
+                        Your answer: ${yourAnswer}
+                    </div>
+
+                    ${
+                        !isCorrect
+                        ? `
+                            <div class="ans-line correct">
+                                Correct answer: ${correctAnswer}
+                            </div>
+                          `
+                        : ""
+                    }
+
+                </div>
+            `;
+
+        }).join("");
+
+
+        // Review button
+        reviewButton.addEventListener("click", function () {
+
+            const isHidden =
+                reviewList.classList.toggle("hidden");
+
+            reviewButton.textContent =
+                isHidden
+                    ? "Review Answers"
+                    : "Hide Review";
+
+        });
+
+    } else {
+
+        document.getElementById("result-title").textContent =
+            "No result available";
+
+        document.getElementById("result-sub").textContent =
+            "Please complete a test first.";
+
+    }
+</script>
+<script src="{{ url_for('static', filename='js/auth-guard.js') }}"></script>
+</body>
+
+</html>
